@@ -1,0 +1,383 @@
+// Task #1
+
+fcsang@fluffy ~/cs240/lab/lab3 $ cat EvaluateExp.java
+public class EvaluateExp
+{
+   public static void main(String[] args)
+                      throws EmptyStackException, FullStackException
+   {
+      String exp1 = "(((6+9)/3)*(6-4))";
+      String exp2 = "((1+2+3+4)/2)";
+      String exp3 = "(((1+2+3+4)/2)+3*5)";
+
+      expEvaluating(exp1);
+      expEvaluating(exp2);
+      expEvaluating(exp3);
+   }
+
+   public static void expEvaluating(String exp)
+                      throws EmptyStackException, FullStackException
+   {
+      System.out.println("\nexp = " + exp);
+      char[] expArray = exp.toCharArray();
+
+      ArrayStack<Integer> operandS = new ArrayStack<Integer>();
+      ArrayStack<Character> operatorS = new ArrayStack<Character>();
+      char c;
+      int operand1, operand2; 
+      char operator;
+      for (int i=0; i<expArray.length; i++)
+      {
+         c = expArray[i];
+         if (c=='(')
+            operatorS.push(c);
+         else if (isOperator(c))
+            operatorS.push(c);
+         else if (isOperand(c))
+            operandS.push(c-'0');
+         else if (c==')')
+         {
+            do
+            {
+               operand2 = operandS.pop();
+               operand1 = operandS.pop();
+               operator = operatorS.pop();
+               switch (operator)
+               {
+                  case '+': operandS.push(operand1 + operand2);
+                            break;
+                  case '-': operandS.push(operand1 - operand2);
+                            break;
+                  case '*': operandS.push(operand1 * operand2);
+                            break;
+                  case '/': operandS.push(operand1 / operand2);
+                            break;
+               }
+            } while (operatorS.top()!='(');
+            operatorS.pop();  
+         }
+         else
+         {
+            System.out.println("illegal character encountered");
+            System.exit(0);
+         }
+      }
+      System.out.println("result = " + operandS.pop());            
+   }
+   private static boolean isOperator(char c)
+   {
+      return (c=='+' || c=='-' || c=='*' || c=='/');
+   }
+   private static boolean isOperand(char c)
+   {
+      return (c >= '0' && c <= '9');
+   }
+}
+
+fcsang@fluffy ~/cs240/lab/lab3 $ java EvaluateExp
+
+exp = (((6+9)/3)*(6-4))
+result = 10
+
+exp = ((1+2+3+4)/2)
+result = 5
+
+exp = (((1+2+3+4)/2)+3*5)
+result = 20
+
+-------------------------------------------------------------------------
+
+// Task #2
+
+fcsang@fluffy ~/cs240/lab/lab3 $ cat DoubleStack.java
+public class DoubleStack<T>
+{
+   public static final int CAPACITY = 100;
+   protected int capacity;
+   protected T S[];
+   protected int topA;
+   protected int topB;
+
+   public DoubleStack()
+   {
+      this(CAPACITY);
+   }
+   public DoubleStack(int cap)
+   {
+      capacity = cap;
+      S = (T[]) new Object[capacity];
+      topA = -1;
+      topB = capacity;
+   }
+   public void pushA(T newData)
+   {
+      if (topA+1==topB)
+      {
+         System.out.println("stack A is full: cannot push");
+         return;
+      }
+      S[++topA] = newData;
+   }
+   public void pushB(T newData)
+   {
+      if (topB-1==topA)
+      {
+         System.out.println("stack B is full: cannot push");
+         return;
+      }
+      S[--topB] = newData;
+   }
+   public T popA()
+   {
+      if (topA<0)
+      {
+         System.out.println("stack A is empty: cannot pop");
+         return null;
+      }
+      T element = S[topA];
+      S[topA--] = null;
+      return element;
+   }
+   public T popB()
+   {
+      if (topB>capacity-1)
+      {
+         System.out.println("stack B is empty: cannot pop");
+         return null;
+      }
+      T element = S[topB];
+      S[topB++] = null;
+      return element;
+   }
+   public String toString()
+   {
+      String s = "[ ";
+      for (int i=0; i<capacity; i++)
+         s += S[i] + " ";
+      return s + "]";
+   }
+}
+
+fcsang@fluffy ~/cs240/lab/lab3 $ cat DoubleStackTest.java
+import java.util.Scanner;
+
+public class DoubleStackTest
+{
+   public static void main(String[] args)
+   {
+      Scanner kb = new Scanner(System.in);
+      System.out.println("1. create DoubleStack");
+      System.out.println("2. pushA");
+      System.out.println("3. pushB");
+      System.out.println("4. popA");
+      System.out.println("5. popB");
+      System.out.println("6. print DoubleStack");
+      System.out.println("7. quit");
+      int choice;
+      String dataType = "";
+      int inputSize;
+      int input1;
+      String input2;
+      DoubleStack S = new DoubleStack();
+
+      while (true)
+      {
+         System.out.print("\ncommand? ");
+         choice = kb.nextInt();
+         if (choice==7)
+            break;
+         else if (choice==1)
+         {
+            kb.nextLine();
+            System.out.print("data type - integer or string? ");
+            dataType = kb.nextLine();
+            System.out.print("size? ");
+            inputSize = kb.nextInt();
+            if (dataType.equalsIgnoreCase("integer"))
+               S = new DoubleStack<Integer>(inputSize);
+            else
+               S = new DoubleStack<String>(inputSize);
+            System.out.println("S = " + S); 
+         }
+         else if (choice==2)
+         {
+            System.out.print("newData? ");
+            if (dataType.equalsIgnoreCase("integer"))
+            {
+               input1 = kb.nextInt();
+               S.pushA(input1);
+            }
+            else
+            { 
+               kb.nextLine();
+               input2 = kb.nextLine();
+               S.pushA(input2);
+            }
+            System.out.println("S = " + S);
+         }
+         else if (choice==3)
+         {
+            System.out.print("newData? ");
+            if (dataType.equalsIgnoreCase("integer"))
+            {
+               input1 = kb.nextInt();
+               S.pushB(input1);
+            }
+            else
+            {
+               kb.nextLine();
+               input2 = kb.nextLine();
+               S.pushB(input2);
+            }
+            System.out.println("S = " + S);
+         }
+         else if (choice==4)
+         {
+            S.popA();
+            System.out.println("S = " + S);
+         }
+         else if (choice==5)
+         {
+            S.popB();
+            System.out.println("S = " + S);
+         }
+         else if (choice==6)
+         {
+            System.out.println("S = " + S);
+         }
+         else
+            System.out.println("invalid, enter again");
+      }
+   }
+}
+
+fcsang@fluffy ~/cs240/lab/lab3 $ java DoubleStackTest
+1. create DoubleStack
+2. pushA
+3. pushB
+4. popA
+5. popB
+6. print DoubleStack
+7. quit
+
+command? 1
+data type - integer or string? integer
+size? 5
+S = [ null null null null null ]
+
+command? 2
+newData? 1
+S = [ 1 null null null null ]
+
+command? 2
+newData? 2
+S = [ 1 2 null null null ]
+
+command? 2
+newData? 3
+S = [ 1 2 3 null null ]
+
+command? 3  
+newData? -1
+S = [ 1 2 3 null -1 ]
+
+command? 3
+newData? -2
+S = [ 1 2 3 -2 -1 ]
+
+command? 3
+newData? -3
+stack B is full: cannot push
+S = [ 1 2 3 -2 -1 ]
+
+command? 4  
+S = [ 1 2 null -2 -1 ]
+
+command? 3
+newData? -3
+S = [ 1 2 -3 -2 -1 ]
+
+command? 4
+S = [ 1 null -3 -2 -1 ]
+
+command? 4
+S = [ null null -3 -2 -1 ]
+
+command? 4
+stack A is empty: cannot pop
+S = [ null null -3 -2 -1 ]
+
+command? 7
+
+fcsang@fluffy ~/cs240/lab/lab3 $ java DoubleStackTest
+1. create DoubleStack
+2. pushA
+3. pushB
+4. popA
+5. popB
+6. print DoubleStack
+7. quit
+
+command? 1
+data type - integer or string? string
+size? 3
+S = [ null null null ]
+
+command? 2
+newData? alan
+S = [ alan null null ]
+
+command? 2
+newData? angela
+S = [ alan angela null ]
+
+command? 2
+newData? annie
+S = [ alan angela annie ]
+
+command? 2
+newData? more
+stack A is full: cannot push
+S = [ alan angela annie ]
+
+command? 3
+newData? sunday
+stack B is full: cannot push
+S = [ alan angela annie ]
+
+command? 4
+S = [ alan angela null ]
+
+command? 4
+S = [ alan null null ]
+
+command? 4
+S = [ null null null ]
+
+command? 3
+newData? sunday
+S = [ null null sunday ]
+
+command? 3
+newData? saturday
+S = [ null saturday sunday ]
+
+command? 3
+newData? friday
+S = [ friday saturday sunday ]
+
+command? 3
+newData? thursday
+stack B is full: cannot push
+S = [ friday saturday sunday ]
+
+command? 5
+S = [ null saturday sunday ]
+
+command? 5
+S = [ null null sunday ]
+
+command? 5
+S = [ null null null ]
+
+command? 7
